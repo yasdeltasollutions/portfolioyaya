@@ -36,6 +36,9 @@ const FOCUS_COPY: { title: string; body: string }[] = [
   },
 ];
 
+const FOV_DEFAULT = 45;
+const FOV_FOCUS = 56;
+
 /** Câmara em perspetiva (não ortográfica) — evita zoom/left-right errados que “apagam” a cena. */
 function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
   const { camera } = useThree();
@@ -52,6 +55,12 @@ function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
         : getPlanetLayout(focusIndex, focusIndex).position;
     lookRef.current.lerp(lookTarget, k);
     camera.lookAt(lookRef.current);
+
+    const p = camera as THREE.PerspectiveCamera;
+    const targetFov = focusIndex === null ? FOV_DEFAULT : FOV_FOCUS;
+    const kf = 1 - Math.exp(-3 * delta);
+    p.fov = THREE.MathUtils.lerp(p.fov, targetFov, kf);
+    p.updateProjectionMatrix();
   });
 
   return null;
@@ -259,7 +268,7 @@ export default function AboutPlanet() {
         }`}
       >
         <Canvas
-          camera={{ position: [0, 0.3, 13.5], fov: 45, near: 0.1, far: 200 }}
+          camera={{ position: [0, 0.3, 13.5], fov: FOV_DEFAULT, near: 0.1, far: 200 }}
           gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
           dpr={[1, 2]}
           onCreated={({ gl, scene }) => {

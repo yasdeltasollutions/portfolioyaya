@@ -27,9 +27,10 @@ export function getPlanetLayout(
   }
 
   if (focus === planetIndex) {
+    /** +50% face ao valor anterior (1.52 × 1.5); câmara/FOV compensam o recorte. */
     return {
       position: new THREE.Vector3(2.55, 0.12, 0.85),
-      scaleMul: 1.1,
+      scaleMul: 2.28,
       opacity: 1,
     };
   }
@@ -59,5 +60,6 @@ export function getCameraTarget(focus: PlanetFocusIndex | null): THREE.Vector3 {
     return new THREE.Vector3(0, 0.3, 13.5);
   }
   const cx = focus === 0 ? 2.0 : focus === 1 ? 0 : -2.0;
-  return new THREE.Vector3(cx, 0.4, 11.5);
+  /** Mais afastada para o planeta ~50% maior caber no frustum. */
+  return new THREE.Vector3(cx, 0.42, 15.1);
 }
