@@ -1,0 +1,480 @@
+/**
+ * Texturas cartoon / gigantes gasosos — mesmo estilo visual do PlanetScene de referência.
+ * Esquerda = laranja · Centro = rosa · Direita = roxo.
+ */
+export const SITE_PLANET_PALETTES: [string, string, string][] = [
+  ['#ffedd5', '#fb923c', '#c2410c'],
+  ['#fce7f3', '#f472b6', '#be185d'],
+  ['#ede9fe', '#8b5cf6', '#5b21b6'],
+];
+
+export type PlanetTextureVariant = 'jupiter-purple' | 'gas-pink' | 'gas-orange';
+
+export const ABOUT_PLANET_TEXTURE_SEEDS = [42_001, 42_337, 42_689] as const;
+
+export function mulberry32(seed: number) {
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function generateRadialCartoonTexture(center: string, mid: string, edge: string, blobSeed: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const rand = mulberry32(blobSeed);
+
+  const gradient = ctx.createRadialGradient(256, 256, 50, 256, 256, 256);
+  gradient.addColorStop(0, center);
+  gradient.addColorStop(0.5, mid);
+  gradient.addColorStop(1, edge);
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 20; i++) {
+    ctx.beginPath();
+    ctx.arc(rand() * 512, rand() * 512, rand() * 60 + 20, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${rand() * 0.1})`;
+    ctx.fill();
+  }
+
+  return canvas;
+}
+
+export function generateJupiterPurpleTexture(seed: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const rand = mulberry32(seed);
+  const W = 1024;
+  const H = 512;
+
+  const ang = (x: number) => (x / W) * Math.PI * 2;
+
+  const wave = (x: number, base: number, amp: number, ph: number) =>
+    base + Math.sin(ang(x) * 4 + ph) * amp + Math.sin(ang(x) * 9 + ph * 0.8) * (amp * 0.38);
+
+  const fillWavyBand = (y0: number, h: number, color: string, alpha: number, ph: number) => {
+    ctx.beginPath();
+    const step = 4;
+    for (let x = 0; x <= W; x += step) {
+      const y = wave(x, y0, 4, ph);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    for (let x = W; x >= 0; x -= step) {
+      const y = wave(x, y0 + h, 4, ph + 1.2);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#6d28d9');
+  sky.addColorStop(0.12, '#7c3aed');
+  sky.addColorStop(0.26, '#8b5cf6');
+  sky.addColorStop(0.4, '#a855f7');
+  sky.addColorStop(0.52, '#c026d3');
+  sky.addColorStop(0.64, '#d946ef');
+  sky.addColorStop(0.76, '#e879f9');
+  sky.addColorStop(0.88, '#d946ef');
+  sky.addColorStop(1, '#c084fc');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  const bandColors = [
+    'rgba(192, 38, 211, 0.5)',
+    'rgba(124, 58, 237, 0.48)',
+    'rgba(217, 70, 239, 0.52)',
+    'rgba(147, 51, 234, 0.46)',
+    'rgba(168, 85, 247, 0.5)',
+    'rgba(236, 72, 153, 0.38)',
+    'rgba(109, 40, 217, 0.45)',
+    'rgba(192, 132, 252, 0.48)',
+    'rgba(139, 92, 246, 0.46)',
+    'rgba(219, 39, 119, 0.36)',
+  ];
+
+  let y = 0;
+  let bi = 0;
+  while (y < H - 2) {
+    const bh = 28 + rand() * 36;
+    fillWavyBand(y, bh, bandColors[bi % bandColors.length], 0.55, seed * 0.01 + bi * 0.7);
+    y += bh * 0.92;
+    bi++;
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const yy = 35 + (i / 12) * (H - 70);
+    ctx.strokeStyle = `rgba(255, 200, 255, ${0.12 + rand() * 0.12})`;
+    ctx.lineWidth = 1 + rand() * 0.5;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 5) {
+      const py = wave(x, yy, 2.5, seed + i);
+      if (x === 0) ctx.moveTo(x, py);
+      else ctx.lineTo(x, py);
+    }
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 70; i++) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const r = 1 + rand() * 3.5;
+    ctx.fillStyle = `rgba(255, 220, 255, ${0.28 + rand() * 0.28})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  return canvas;
+}
+
+export function generatePinkGasGiantTexture(seed: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const rand = mulberry32(seed);
+  const W = 1024;
+  const H = 512;
+
+  const ang = (x: number) => (x / W) * Math.PI * 2;
+
+  const wavePink = (x: number, base: number, amp: number, ph: number) => {
+    const s =
+      Math.sin(ang(x) * 5 + ph) * amp +
+      Math.sin(ang(x) * 12 + ph * 0.9) * (amp * 0.42) +
+      Math.sin(ang(x) * 21 + ph * 1.1) * (amp * 0.22);
+    const zig = (Math.sin(ang(x) * 31 + ph) > 0 ? 1 : -1) * amp * 0.18;
+    return base + s + zig;
+  };
+
+  const fillWavyBandPink = (y0: number, h: number, color: string, alpha: number, ph: number) => {
+    ctx.beginPath();
+    const step = 4;
+    for (let x = 0; x <= W; x += step) {
+      const y = wavePink(x, y0, 5, ph);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    for (let x = W; x >= 0; x -= step) {
+      const y = wavePink(x, y0 + h, 5, ph + 1.4);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#831843');
+  sky.addColorStop(0.12, '#9f1239');
+  sky.addColorStop(0.26, '#be185d');
+  sky.addColorStop(0.4, '#db2777');
+  sky.addColorStop(0.54, '#ec4899');
+  sky.addColorStop(0.68, '#f472b6');
+  sky.addColorStop(0.82, '#fda4af');
+  sky.addColorStop(0.94, '#fbcfe8');
+  sky.addColorStop(1, '#fce7f3');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  const bandColors = [
+    'rgba(157, 23, 77, 0.48)',
+    'rgba(236, 72, 153, 0.45)',
+    'rgba(190, 24, 93, 0.5)',
+    'rgba(251, 113, 133, 0.4)',
+    'rgba(219, 39, 119, 0.48)',
+    'rgba(244, 114, 182, 0.42)',
+    'rgba(131, 24, 67, 0.46)',
+    'rgba(249, 168, 212, 0.4)',
+    'rgba(225, 29, 72, 0.44)',
+    'rgba(253, 164, 175, 0.38)',
+  ];
+
+  let y = 0;
+  let bi = 0;
+  while (y < H - 2) {
+    const bh = 26 + rand() * 34;
+    fillWavyBandPink(y, bh, bandColors[bi % bandColors.length], 0.52, seed * 0.02 + bi * 0.65);
+    y += bh * 0.9;
+    bi++;
+  }
+
+  for (let i = 0; i < 16; i++) {
+    const yy = 28 + (i / 16) * (H - 56);
+    ctx.strokeStyle = `rgba(255, 240, 250, ${0.1 + rand() * 0.1})`;
+    ctx.lineWidth = 1 + rand() * 0.6;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 4) {
+      const py = wavePink(x, yy, 3, seed + i * 1.3);
+      if (x === 0) ctx.moveTo(x, py);
+      else ctx.lineTo(x, py);
+    }
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 130; i++) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const r = 0.8 + rand() * 3.2;
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.18 + rand() * 0.35})`;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 320; i++) {
+    ctx.fillStyle = `rgba(255, ${200 + rand() * 55}, ${220 + rand() * 35}, ${0.04 + rand() * 0.07})`;
+    ctx.fillRect(rand() * W, rand() * H, 1 + rand() * 2, 1 + rand() * 2);
+  }
+
+  return canvas;
+}
+
+export function generateOrangeGasGiantTexture(seed: number) {
+  const W = 1024;
+  const H = 512;
+
+  const work = document.createElement('canvas');
+  work.width = W;
+  work.height = H;
+  const wctx = work.getContext('2d');
+  if (!wctx) {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    return c;
+  }
+
+  const rand = mulberry32(seed);
+  const ang = (x: number) => (x / W) * Math.PI * 2;
+
+  const wave = (x: number, base: number, amp: number, ph: number) =>
+    base +
+    Math.sin(ang(x) * 3 + ph) * amp +
+    Math.sin(ang(x) * 7 + ph * 0.88) * (amp * 0.42) +
+    Math.sin(ang(x) * 12 + ph * 1.05) * (amp * 0.14);
+
+  const fillWavyBand = (
+    c: CanvasRenderingContext2D,
+    y0: number,
+    h: number,
+    color: string,
+    ph: number,
+    amp: number,
+  ) => {
+    c.beginPath();
+    const step = 2;
+    for (let x = 0; x <= W; x += step) {
+      const y = wave(x, y0, amp, ph);
+      if (x === 0) c.moveTo(x, y);
+      else c.lineTo(x, y);
+    }
+    for (let x = W; x >= 0; x -= step) {
+      const y = wave(x, y0 + h, amp, ph + 1.18);
+      c.lineTo(x, y);
+    }
+    c.closePath();
+    c.fillStyle = color;
+    c.fill();
+  };
+
+  const bg = wctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#ffedd5');
+  bg.addColorStop(0.28, '#fdba74');
+  bg.addColorStop(0.52, '#fb923c');
+  bg.addColorStop(0.78, '#f97316');
+  bg.addColorStop(1, '#ea580c');
+  wctx.fillStyle = bg;
+  wctx.fillRect(0, 0, W, H);
+
+  const bandColors = [
+    '#fff7ed',
+    '#ffedd5',
+    '#fed7aa',
+    '#fdba74',
+    '#fb923c',
+    '#f97316',
+    '#ea580c',
+    '#fec89a',
+    '#ffedd5',
+    '#fdba74',
+    '#fb923c',
+    '#c2410c',
+  ];
+
+  let y = -14;
+  let bi = 0;
+  while (y < H + 14) {
+    const h = 3 + rand() * 18;
+    fillWavyBand(wctx, y, h, bandColors[bi % bandColors.length], seed * 0.014 + bi * 0.39, 4.5 + rand() * 2.5);
+    y += h * 0.68;
+    bi++;
+  }
+
+  wctx.globalAlpha = 0.5;
+  y = -10;
+  bi = 5;
+  while (y < H + 10) {
+    const h = 5 + rand() * 24;
+    fillWavyBand(wctx, y, h, bandColors[(bi + 4) % bandColors.length], seed * 0.07 + bi * 0.33, 3.5 + rand() * 2);
+    y += h * 0.74;
+    bi++;
+  }
+  wctx.globalAlpha = 1;
+
+  const smoothBlob = (
+    c: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    rot: number,
+    ph: number,
+    fill: string,
+  ) => {
+    const n = 40;
+    c.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const t = (i / n) * Math.PI * 2;
+      const w = 1 + 0.22 * Math.sin(t * 3 + ph) + 0.14 * Math.sin(t * 5 + ph * 1.15);
+      const x = cx + Math.cos(t + rot) * rx * w;
+      const yy = cy + Math.sin(t + rot) * ry * w;
+      if (i === 0) c.moveTo(x, yy);
+      else c.lineTo(x, yy);
+    }
+    c.closePath();
+    c.fillStyle = fill;
+    c.fill();
+  };
+
+  const blobDup = (cx: number, cy: number, rx: number, ry: number, rot: number, ph: number, fill: string) => {
+    smoothBlob(wctx, cx, cy, rx, ry, rot, ph, fill);
+    if (cx - rx < 70) smoothBlob(wctx, cx + W, cy, rx, ry, rot, ph, fill);
+    if (cx + rx > W - 70) smoothBlob(wctx, cx - W, cy, rx, ry, rot, ph, fill);
+  };
+
+  for (let i = 0; i < 32; i++) {
+    const cx = rand() * W;
+    const cy = rand() * H;
+    const rx = 40 + rand() * 130;
+    const ry = 16 + rand() * 52;
+    const rot = (rand() - 0.5) * 0.9;
+    const ph = seed * 0.3 + i * 2.11;
+    const a = 0.42 + rand() * 0.35;
+    blobDup(cx, cy, rx, ry, rot, ph, `rgba(255, 220, 180, ${a})`);
+  }
+  for (let i = 0; i < 26; i++) {
+    const cx = rand() * W;
+    const cy = rand() * H;
+    const rx = 28 + rand() * 100;
+    const ry = 12 + rand() * 42;
+    const rot = (rand() - 0.5) * 1;
+    const ph = seed * 0.5 + i * 1.9;
+    const a = 0.28 + rand() * 0.3;
+    blobDup(cx, cy, rx, ry, rot, ph, `rgba(234, 88, 12, ${a})`);
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  ctx.filter = 'blur(4px)';
+  ctx.drawImage(work, 0, 0);
+  ctx.filter = 'none';
+
+  for (let i = 0; i < 14; i++) {
+    const cx = rand() * W;
+    const cy = rand() * H;
+    const r = 14 + rand() * 28;
+    const rIn = r * (0.38 + rand() * 0.15);
+    ctx.fillStyle = `rgb(${175 + rand() * 35}, ${55 + rand() * 28}, ${12 + rand() * 14})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rIn, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgb(${255}, ${190 + rand() * 45}, ${120 + rand() * 40})`;
+    ctx.lineWidth = 2 + rand() * 2.2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < 620; i++) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const rr = 0.45 + rand() * 1.35;
+    ctx.fillStyle = `rgba(${200 + rand() * 40}, ${70 + rand() * 45}, ${15 + rand() * 22}, ${0.45 + rand() * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(x, y, rr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 2800; i++) {
+    ctx.fillStyle = `rgba(${190 + rand() * 50}, ${65 + rand() * 40}, ${18 + rand() * 18}, ${0.02 + rand() * 0.09})`;
+    ctx.fillRect(rand() * W, rand() * H, 1, 1);
+  }
+  for (let i = 0; i < 900; i++) {
+    ctx.fillStyle = `rgba(255, 248, 238, ${0.015 + rand() * 0.045})`;
+    ctx.fillRect(rand() * W, rand() * H, 1, 1);
+  }
+
+  const img = ctx.getImageData(0, 0, W, H);
+  const d = img.data;
+  for (let p = 0; p < d.length; p += 4) {
+    const n = (rand() - 0.5) * 8;
+    d[p] = Math.min(255, Math.max(0, d[p] + n));
+    d[p + 1] = Math.min(255, Math.max(0, d[p + 1] + n * 0.9));
+    d[p + 2] = Math.min(255, Math.max(0, d[p + 2] + n * 0.55));
+  }
+  ctx.putImageData(img, 0, 0);
+
+  return canvas;
+}
+
+export function createPlanetTextureCanvas(
+  palette: [string, string, string],
+  textureSeed: number,
+  variant: PlanetTextureVariant,
+): HTMLCanvasElement {
+  if (variant === 'jupiter-purple') return generateJupiterPurpleTexture(textureSeed);
+  if (variant === 'gas-pink') return generatePinkGasGiantTexture(textureSeed);
+  return generateOrangeGasGiantTexture(textureSeed);
+}
+
+export function planetMaterialStyle(variant: PlanetTextureVariant) {
+  if (variant === 'jupiter-purple') {
+    return { roughness: 0.52, metalness: 0.08, emissive: '#d946ef', emissiveIntensity: 0.14 };
+  }
+  if (variant === 'gas-pink') {
+    return { roughness: 0.52, metalness: 0.08, emissive: '#f472b6', emissiveIntensity: 0.1 };
+  }
+  return { roughness: 0.52, metalness: 0.08, emissive: '#fb923c', emissiveIntensity: 0.11 };
+}
+
+/** Mesma velocidade angular base que o PlanetScene de referência (rad/s). */
+export const BACKGROUND_MATCH_SPIN_Y = 0.075;

@@ -1,0 +1,526 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 12% 2%;
+    --foreground: 0 0% 95%;
+    --card: 240 8% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 8% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 272 72% 46%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 6% 14%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 240 6% 14%;
+    --muted-foreground: 240 4% 55%;
+    --accent: 340 100% 65%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 18%;
+    --input: 240 6% 18%;
+    --ring: 272 72% 46%;
+    --radius: 0.75rem;
+
+    --neon-purple: 272 72% 46%;
+    --neon-pink: 340 100% 65%;
+    --neon-orange: 26 100% 55%;
+    --glass: 240 8% 12%;
+    --glass-border: 240 6% 22%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-gradient-neon {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-orange)));
+  }
+  .bg-gradient-neon {
+    background-image: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-orange)));
+  }
+  .glass {
+    background: hsl(var(--glass) / 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border) / 0.4);
+  }
+  /* Secções após o hero: véu escuro leve — sem backdrop-blur (o blur escondia o WebGL) */
+  .section-soft-bg {
+    background: hsl(var(--background) / 0.48);
+  }
+  .glow-purple {
+    box-shadow: 0 0 20px hsl(var(--neon-purple) / 0.3), 0 0 60px hsl(var(--neon-purple) / 0.1);
+  }
+  .glow-pink {
+    box-shadow: 0 0 20px hsl(var(--neon-pink) / 0.3), 0 0 60px hsl(var(--neon-pink) / 0.1);
+  }
+  .glow-text {
+    text-shadow: 0 0 40px hsl(var(--neon-purple) / 0.5), 0 0 80px hsl(var(--neon-pink) / 0.3);
+  }
+  .neon-border {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--neon-purple) / 0.5), hsl(var(--neon-pink) / 0.5), hsl(var(--neon-orange) / 0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Hero CTA — glow em camadas (hover), brilho interno (::before) */
+  .btn-glow-neon {
+    @apply relative inline-flex items-center justify-center overflow-hidden rounded-lg;
+    transition:
+      box-shadow 0.35s ease-in-out,
+      transform 0.2s ease,
+      background-color 0.35s ease,
+      background-image 0.35s ease,
+      border-color 0.3s ease,
+      color 0.25s ease,
+      backdrop-filter 0.35s ease;
+    box-shadow:
+      0 0 12px hsl(var(--neon-purple) / 0.55),
+      0 0 28px hsl(var(--neon-pink) / 0.35),
+      0 0 56px hsl(var(--neon-orange) / 0.2);
+  }
+  .btn-glow-neon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at 50% 40%,
+      hsl(0 0% 100% / 0.28),
+      hsl(var(--neon-pink) / 0.08) 45%,
+      transparent 70%
+    );
+    transform: scale(0);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .btn-glow-neon:hover::before {
+    transform: scale(1);
+  }
+  .btn-glow-neon:hover {
+    box-shadow:
+      0 0 18px hsl(var(--neon-purple) / 0.85),
+      0 0 48px hsl(var(--neon-pink) / 0.55),
+      0 0 100px hsl(var(--neon-orange) / 0.35);
+  }
+  .btn-glow-neon:active {
+    transform: scale(0.97);
+  }
+
+  /* CTA secundário: contorno néon + glass → gradiente + glow no hover */
+  .btn-glow-neon-ghost {
+    @apply relative inline-flex items-center justify-center overflow-hidden rounded-lg;
+    transition:
+      box-shadow 0.35s ease-in-out,
+      transform 0.2s ease,
+      background-color 0.35s ease,
+      background-image 0.35s ease,
+      border-color 0.3s ease,
+      color 0.25s ease,
+      backdrop-filter 0.35s ease;
+    border: 1px solid transparent;
+    background-image:
+      linear-gradient(hsl(var(--glass) / 0.72), hsl(var(--glass) / 0.72)),
+      linear-gradient(135deg, hsl(var(--neon-purple) / 0.55), hsl(var(--neon-pink) / 0.48), hsl(var(--neon-orange) / 0.42));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    backdrop-filter: blur(20px);
+    color: hsl(var(--foreground));
+    box-shadow: 0 0 18px hsl(var(--neon-purple) / 0.08);
+  }
+  .btn-glow-neon-ghost::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at 50% 40%,
+      hsl(0 0% 100% / 0.28),
+      hsl(var(--neon-pink) / 0.08) 45%,
+      transparent 70%
+    );
+    transform: scale(0);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .btn-glow-neon-ghost:hover {
+    border-color: transparent;
+    color: hsl(var(--primary-foreground));
+    background-image: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-orange)));
+    background-origin: border-box;
+    background-clip: border-box;
+    backdrop-filter: none;
+    box-shadow:
+      0 0 18px hsl(var(--neon-purple) / 0.85),
+      0 0 48px hsl(var(--neon-pink) / 0.55),
+      0 0 100px hsl(var(--neon-orange) / 0.35);
+  }
+  .btn-glow-neon-ghost:hover::before {
+    transform: scale(1);
+  }
+  .btn-glow-neon-ghost:active {
+    transform: scale(0.97);
+  }
+
+  /* Hover em “Contato” → “Ver Projetos” com o mesmo aspeto glass + contorno do Contato */
+  .hero-cta-group:has(.btn-glow-neon-ghost:hover) .btn-glow-neon--projects {
+    background-image:
+      linear-gradient(hsl(var(--glass) / 0.72), hsl(var(--glass) / 0.72)),
+      linear-gradient(135deg, hsl(var(--neon-purple) / 0.55), hsl(var(--neon-pink) / 0.48), hsl(var(--neon-orange) / 0.42)) !important;
+    background-origin: border-box;
+    background-clip: padding-box, border-box !important;
+    border: 1px solid transparent !important;
+    color: hsl(var(--foreground)) !important;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 18px hsl(var(--neon-purple) / 0.08) !important;
+  }
+  .hero-cta-group:has(.btn-glow-neon-ghost:hover) .btn-glow-neon--projects:hover {
+    background-image: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-orange))) !important;
+    background-clip: border-box !important;
+    color: hsl(var(--primary-foreground)) !important;
+    backdrop-filter: none;
+    box-shadow:
+      0 0 18px hsl(var(--neon-purple) / 0.85),
+      0 0 48px hsl(var(--neon-pink) / 0.55),
+      0 0 100px hsl(var(--neon-orange) / 0.35) !important;
+  }
+
+  /* Sobre — halo radial atrás do bloco de texto (esquerda) */
+  .about-blob {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(72px);
+    will-change: filter;
+  }
+  .about-blob--left {
+    left: clamp(6rem, 22vw, 14rem);
+    top: 52%;
+    width: clamp(416px, 101.4vw, 936px);
+    height: clamp(416px, 101.4vw, 936px);
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--neon-purple) / 0.55) 0%,
+      hsl(var(--neon-pink) / 0.32) 26%,
+      hsl(var(--neon-purple) / 0.18) 46%,
+      hsl(var(--neon-purple) / 0.06) 68%,
+      transparent 90%
+    );
+    opacity: 0.48;
+    box-shadow: 0 0 160px 100px hsl(var(--neon-purple) / 0.22);
+  }
+
+  .about-section-body {
+    padding: 0 0.25rem 1rem;
+  }
+
+  .about-about-copy p,
+  .about-about-copy span {
+    text-shadow: 0 1px 18px hsl(0 0% 0% / 0.65);
+  }
+
+  /* ─── Page loader: átomo 3D — paleta neon do site, órbitas mais circulares ─── */
+  .page-loader {
+    @apply fixed inset-0 z-[10000] flex items-center justify-center;
+    background: hsl(var(--background));
+    transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s step-end;
+  }
+  .page-loader--out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .page-loader__inner {
+    @apply flex flex-col items-center gap-8;
+  }
+  .page-loader__label {
+    @apply text-sm font-semibold tracking-[0.28em] uppercase text-gradient-neon;
+    filter: drop-shadow(0 0 10px hsl(var(--neon-purple) / 0.4));
+  }
+  .atom-scene {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    /* Mais perspectiva = projeção menos “achatada” */
+    perspective: 880px;
+  }
+  .atom-nucleus {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-pink)), hsl(var(--neon-orange)));
+    box-shadow:
+      0 0 12px hsl(var(--neon-purple) / 0.9),
+      0 0 26px hsl(var(--neon-pink) / 0.55),
+      0 0 44px hsl(var(--neon-orange) / 0.35);
+    z-index: 2;
+  }
+  /* Sem rotação global no grupo — senão todas as órbitas “caem” no mesmo sentido */
+  .atom-spin {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  /* Posição do plano orbital em torno do núcleo (6 × 60°) */
+  .atom-orbit-wrap {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    pointer-events: none;
+  }
+  .atom-orbit-wrap--a {
+    transform: rotateY(0deg) rotateX(52deg);
+  }
+  .atom-orbit-wrap--b {
+    transform: rotateY(60deg) rotateX(52deg);
+  }
+  .atom-orbit-wrap--c {
+    transform: rotateY(120deg) rotateX(52deg);
+  }
+  .atom-orbit-wrap--d {
+    transform: rotateY(180deg) rotateX(52deg);
+  }
+  .atom-orbit-wrap--e {
+    transform: rotateY(240deg) rotateX(52deg);
+  }
+  .atom-orbit-wrap--f {
+    transform: rotateY(300deg) rotateX(52deg);
+  }
+  /* Precessão: o plano do anel roda em torno do núcleo — eixos distintos (LR / TB / diagonais) */
+  .atom-orbit-precess {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  @keyframes atom-precess-lr {
+    from {
+      transform: rotateY(0deg);
+    }
+    to {
+      transform: rotateY(360deg);
+    }
+  }
+  @keyframes atom-precess-tb {
+    from {
+      transform: rotateX(0deg);
+    }
+    to {
+      transform: rotateX(360deg);
+    }
+  }
+  /* Diagonal ↗ (esquerda-baixo → direita-cima) */
+  @keyframes atom-precess-dlr {
+    from {
+      transform: rotate3d(1, 3, 0, 0deg);
+    }
+    to {
+      transform: rotate3d(1, 1, 0, 360deg);
+    }
+  }
+  /* Diagonal ↖ (direita-baixo → esquerda-cima) */
+  @keyframes atom-precess-drl {
+    from {
+      transform: rotate3d(1, -2, 0, 0deg);
+    }
+    to {
+      transform: rotate3d(1, -1, 0, 360deg);
+    }
+  }
+  .atom-orbit-precess--lr {
+    animation: atom-precess-lr 12s linear infinite;
+  }
+  .atom-orbit-precess--tb {
+    animation: atom-precess-tb 11.5s linear infinite;
+  }
+  .atom-orbit-precess--dlr {
+    animation: atom-precess-dlr 14s linear infinite;
+  }
+  .atom-orbit-precess--drl {
+    animation: atom-precess-drl 14s linear infinite;
+  }
+  .atom-orbit-precess--lr.atom-orbit-precess--rev {
+    animation: atom-precess-lr 13.5s linear infinite reverse;
+  }
+  .atom-orbit-precess--tb.atom-orbit-precess--rev {
+    animation: atom-precess-tb 10.5s linear infinite reverse;
+  }
+  /* Anel = conic-gradient (cabeça forte → cauda suave) + máscara donut; rotateZ move o “cometa” */
+  @keyframes atom-orbit-twirl {
+    from {
+      transform: rotateZ(0deg);
+    }
+    to {
+      transform: rotateZ(360deg);
+    }
+  }
+  @keyframes atom-orbit-twirl-ccw {
+    from {
+      transform: rotateZ(0deg);
+    }
+    to {
+      transform: rotateZ(-360deg);
+    }
+  }
+  .atom-orbit-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    animation: atom-orbit-twirl 2.35s linear infinite;
+    /* Furo interior + anel fino; borda exterior transparente */
+    -webkit-mask: radial-gradient(circle, transparent 53.8%, black 54.2%, black 57.2%, transparent 57.7%);
+    mask: radial-gradient(circle, transparent 53.8%, black 54.2%, black 57.2%, transparent 57.7%);
+  }
+  .atom-orbit-ring--a {
+    background: conic-gradient(
+      from 40deg,
+      hsl(var(--neon-purple)) 0deg,
+      hsl(var(--neon-purple) / 0.88) 24deg,
+      hsl(var(--neon-purple) / 0.5) 58deg,
+      hsl(var(--neon-purple) / 0.16) 88deg,
+      hsl(var(--neon-purple) / 0.04) 108deg,
+      transparent 128deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 6px hsl(var(--neon-purple) / 0.65)) drop-shadow(0 0 14px hsl(var(--neon-purple) / 0.28));
+    animation-name: atom-orbit-twirl;
+    animation-duration: 2.2s;
+  }
+  .atom-orbit-ring--b {
+    background: conic-gradient(
+      from 220deg,
+      hsl(var(--neon-pink)) 0deg,
+      hsl(var(--neon-pink) / 0.9) 22deg,
+      hsl(var(--neon-pink) / 0.52) 56deg,
+      hsl(var(--neon-pink) / 0.17) 86deg,
+      hsl(var(--neon-pink) / 0.05) 106deg,
+      transparent 126deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 6px hsl(var(--neon-pink) / 0.6)) drop-shadow(0 0 14px hsl(var(--neon-pink) / 0.26));
+    animation-name: atom-orbit-twirl-ccw;
+    animation-duration: 2.75s;
+  }
+  .atom-orbit-ring--c {
+    /* Perspetiva 3D encolhe esta elipse no ecrã — faixa da máscara um pouco mais larga que A/B para igualar espessura visual */
+    -webkit-mask: radial-gradient(circle, transparent 53.5%, black 53.9%, black 57.9%, transparent 58.4%);
+    mask: radial-gradient(circle, transparent 53.5%, black 53.9%, black 57.9%, transparent 58.4%);
+    background: conic-gradient(
+      from 155deg,
+      hsl(var(--neon-orange)) 0deg,
+      hsl(var(--neon-orange) / 0.88) 24deg,
+      hsl(var(--neon-orange) / 0.48) 58deg,
+      hsl(var(--neon-orange) / 0.15) 90deg,
+      hsl(var(--neon-orange) / 0.04) 110deg,
+      transparent 130deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 7px hsl(var(--neon-orange) / 0.62)) drop-shadow(0 0 15px hsl(var(--neon-orange) / 0.28));
+    animation-name: atom-orbit-twirl-ccw;
+    animation-duration: 3.1s;
+  }
+  /* Misturas na paleta: roxo → rosa (cauda) */
+  .atom-orbit-ring--d {
+    background: conic-gradient(
+      from 300deg,
+      hsl(var(--neon-purple)) 0deg,
+      hsl(var(--neon-pink) / 0.9) 26deg,
+      hsl(var(--neon-pink) / 0.55) 58deg,
+      hsl(var(--neon-purple) / 0.16) 88deg,
+      hsl(var(--neon-pink) / 0.06) 108deg,
+      transparent 128deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 6px hsl(var(--neon-purple) / 0.45)) drop-shadow(0 0 10px hsl(var(--neon-pink) / 0.35))
+      drop-shadow(0 0 14px hsl(var(--neon-pink) / 0.2));
+    animation-name: atom-orbit-twirl;
+    animation-duration: 2.5s;
+  }
+  /* Misturas na paleta: rosa → laranja (cauda) */
+  .atom-orbit-ring--e {
+    background: conic-gradient(
+      from 85deg,
+      hsl(var(--neon-pink)) 0deg,
+      hsl(var(--neon-orange) / 0.92) 30deg,
+      hsl(var(--neon-orange) / 0.5) 60deg,
+      hsl(var(--neon-pink) / 0.14) 90deg,
+      hsl(var(--neon-orange) / 0.05) 110deg,
+      transparent 130deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 6px hsl(var(--neon-pink) / 0.4)) drop-shadow(0 0 10px hsl(var(--neon-orange) / 0.38))
+      drop-shadow(0 0 14px hsl(var(--neon-orange) / 0.2));
+    animation-name: atom-orbit-twirl-ccw;
+    animation-duration: 3.35s;
+  }
+  /* Segunda linha roxa (só neon-purple) */
+  .atom-orbit-ring--f {
+    background: conic-gradient(
+      from 275deg,
+      hsl(var(--neon-purple)) 0deg,
+      hsl(var(--neon-purple) / 0.88) 24deg,
+      hsl(var(--neon-purple) / 0.5) 58deg,
+      hsl(var(--neon-purple) / 0.16) 88deg,
+      hsl(var(--neon-purple) / 0.04) 108deg,
+      transparent 128deg,
+      transparent 360deg
+    );
+    filter: drop-shadow(0 0 6px hsl(var(--neon-purple) / 0.65)) drop-shadow(0 0 14px hsl(var(--neon-purple) / 0.28));
+    animation-name: atom-orbit-twirl-ccw;
+    animation-duration: 2.65s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .atom-spin,
+    .atom-orbit-precess--lr,
+    .atom-orbit-precess--tb,
+    .atom-orbit-precess--dlr,
+    .atom-orbit-precess--drl,
+    .atom-orbit-ring--a,
+    .atom-orbit-ring--b,
+    .atom-orbit-ring--c,
+    .atom-orbit-ring--d,
+    .atom-orbit-ring--e,
+    .atom-orbit-ring--f {
+      animation: none !important;
+    }
+  }
+}
