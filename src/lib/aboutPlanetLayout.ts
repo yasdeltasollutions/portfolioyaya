@@ -6,9 +6,19 @@ export type PlanetFocusIndex = 0 | 1 | 2;
 const SIZE = 1.55;
 export const PLANET_RADII = [0.75 * 1.4 * SIZE, 0.75 * 1.6 * SIZE, 0.75 * 2 * SIZE] as const;
 
-const BEHIND = -2.35;
-const SM = 0.98;
-const OP = 0.94;
+/** Mais negativo = mais “atrás” do planeta em foco (z ~ 0.85). */
+const BEHIND = -3.35;
+const OP = 0.96;
+/**
+ * Slot **direita** (BG_X_RIGHT) maior que o da **esquerda** — o raio base varia por planeta,
+ * por isso o multiplicador da esquerda fica mais baixo para o disco da direita ganhar sempre.
+ */
+const SM_BG_LEFT = 0.68;
+const SM_BG_RIGHT = 1.05;
+/** Mesma altura (Y), separados em X — lado a lado. */
+const BG_Y = 0.12;
+const BG_X_LEFT = -15.4;
+const BG_X_RIGHT = -9.85;
 
 /** Vista inicial: escala comum antes dos acréscimos por planeta (esq. +25%, centro +40%, dir. +60%). */
 const IDLE_SCALE_BASE = 1.45;
@@ -90,24 +100,52 @@ export function getPlanetLayout(
     };
   }
 
-  /** Tabela: quem fica atrás quando o foco é 0, 1 ou 2 */
+  /**
+   * Não focados: atrás do principal, fila horizontal (mesmo Y). **Direita** sempre maior que esquerda.
+   */
+  const zL = BEHIND;
+  const zR = BEHIND - 0.12;
   if (focus === 0) {
     if (planetIndex === 1) {
-      return { position: new THREE.Vector3(-2.2, 0, BEHIND), scaleMul: SM, opacity: OP };
+      return {
+        position: new THREE.Vector3(BG_X_LEFT, BG_Y, zL),
+        scaleMul: SM_BG_LEFT,
+        opacity: OP,
+      };
     }
-    return { position: new THREE.Vector3(3.8, -0.05, BEHIND - 0.2), scaleMul: SM, opacity: OP };
+    return {
+      position: new THREE.Vector3(BG_X_RIGHT, BG_Y, zR),
+      scaleMul: SM_BG_RIGHT,
+      opacity: OP,
+    };
   }
   if (focus === 1) {
     if (planetIndex === 0) {
-      return { position: new THREE.Vector3(-5.2, -0.05, BEHIND), scaleMul: SM, opacity: OP };
+      return {
+        position: new THREE.Vector3(BG_X_LEFT, BG_Y, zL),
+        scaleMul: SM_BG_LEFT,
+        opacity: OP,
+      };
     }
-    return { position: new THREE.Vector3(5.2, -0.05, BEHIND), scaleMul: SM, opacity: OP };
+    return {
+      position: new THREE.Vector3(BG_X_RIGHT, BG_Y, zR),
+      scaleMul: SM_BG_RIGHT,
+      opacity: OP,
+    };
   }
   /* focus === 2 */
   if (planetIndex === 0) {
-    return { position: new THREE.Vector3(-4.8, -0.05, BEHIND), scaleMul: SM, opacity: OP };
+    return {
+      position: new THREE.Vector3(BG_X_LEFT, BG_Y, zL),
+      scaleMul: SM_BG_LEFT,
+      opacity: OP,
+    };
   }
-  return { position: new THREE.Vector3(2.4, 0, BEHIND), scaleMul: SM, opacity: OP };
+  return {
+    position: new THREE.Vector3(BG_X_RIGHT, BG_Y, zR),
+    scaleMul: SM_BG_RIGHT,
+    opacity: OP,
+  };
 }
 
 export function getCameraTarget(focus: PlanetFocusIndex | null): THREE.Vector3 {
