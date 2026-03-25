@@ -51,7 +51,7 @@ export default function Experience() {
                     <Briefcase size={14} className="text-neon-purple" />
                   </div>
 
-                  <div className="glass rounded-xl p-6 neon-border">
+                  <div className="experience-card-glass rounded-xl p-6 neon-border">
                     {/* Cargo → empresa; datas à direita (como antes) */}
                     <header className="mb-5">
                       <div className="flex flex-row items-start justify-between gap-4">

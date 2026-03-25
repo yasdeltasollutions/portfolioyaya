@@ -44,7 +44,7 @@ export default function Index() {
   return (
     <SectionNavProvider>
       <main
-        className="relative flex min-h-screen flex-col bg-transparent overflow-hidden"
+        className="relative flex min-h-screen flex-col bg-transparent overflow-x-hidden"
         style={{ cursor: 'none' }}
       >
         <CustomCursor />

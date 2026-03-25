@@ -214,7 +214,7 @@ function OrbitalParticles() {
 
 /* ───────── Space Dust (deep field particles) — sem interação com o cursor ───────── */
 function SpaceDust() {
-  const count = 520;
+  const count = 400;
   const ref = useRef<THREE.Points>(null);
 
   const { positions, colors } = useMemo(() => {
@@ -369,7 +369,7 @@ export default function SiteParticleBackground() {
 
           <GalaxySpin>
             <SpaceDust />
-            <Stars radius={60} depth={80} count={2000} factor={3} saturation={0.3} fade speed={0.258} />
+            <Stars radius={60} depth={80} count={1540} factor={3} saturation={0.3} fade speed={0.258} />
           </GalaxySpin>
 
           <CameraRig />

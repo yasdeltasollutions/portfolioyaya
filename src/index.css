@@ -73,6 +73,16 @@
     -webkit-backdrop-filter: blur(18px) saturate(1.25);
     box-shadow: 0 12px 40px hsl(272 72% 8% / 0.35);
   }
+  /* Cards Experiência: blur + véu roxo suave (mais leve que a navbar) */
+  .experience-card-glass {
+    background: linear-gradient(
+      180deg,
+      hsl(272 42% 9% / 0.16),
+      hsl(272 40% 5% / 0.12)
+    );
+    backdrop-filter: blur(8px) saturate(1.15);
+    -webkit-backdrop-filter: blur(8px) saturate(1.15);
+  }
   /* Secções após o hero: véu escuro leve — sem backdrop-blur (o blur escondia o WebGL) */
   .section-soft-bg {
     background: hsl(var(--background) / 0.48);
@@ -92,6 +102,62 @@
       0 0 32px hsl(272 82% 52% / 0.6),
       0 0 72px hsl(278 72% 42% / 0.35),
       0 0 120px hsl(270 65% 38% / 0.18);
+  }
+
+  /* Tech icons: brilho no hover só no PNG principal — drop-shadow segue a forma (alpha); reflexo sem glow */
+  .tech-icon-link {
+    --color: hsl(var(--neon-purple));
+    position: relative;
+    box-sizing: border-box;
+    margin-inline: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 7.35rem;
+    min-height: 9.19rem;
+    padding: 0.68rem 0.47rem 1rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    background: transparent;
+  }
+  .tech-icon-link--active .tech-icon-img {
+    filter:
+      drop-shadow(0 0 6px var(--color))
+      drop-shadow(0 0 14px var(--color))
+      drop-shadow(0 0 28px var(--color))
+      drop-shadow(0 0 48px var(--color));
+  }
+  .tech-icon-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.15rem;
+    pointer-events: none;
+  }
+  .tech-icon-img {
+    max-height: 3.41rem;
+    width: auto;
+    object-fit: contain;
+    transition: filter 0.5s ease;
+  }
+  .tech-icon-reflect {
+    max-height: 2.99rem;
+    width: auto;
+    object-fit: contain;
+    transform: scaleY(-1);
+    opacity: 0.45;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    transition: filter 0.5s ease, opacity 0.5s ease;
+  }
+  @media (min-width: 640px) {
+    .tech-icon-img {
+      max-height: 3.68rem;
+    }
+    .tech-icon-reflect {
+      max-height: 3.26rem;
+    }
   }
   .neon-border {
     border: 1px solid transparent;
@@ -261,6 +327,20 @@
     );
     opacity: 0.52;
     box-shadow: 0 0 160px 100px hsl(274 75% 44% / 0.25);
+    transition:
+      left 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      top 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      width 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.65s ease;
+  }
+  /* Foco no planeta Quem Sou: halo atrás do bloco "Eu sou" (coluna esquerda) */
+  #about.about--blob-eu-sou .about-blob--left {
+    left: clamp(7rem, 26vw, 22rem);
+    top: clamp(38%, 52vh, 62%);
+    width: clamp(280px, 38vw, 480px);
+    height: clamp(280px, 38vw, 480px);
+    opacity: 0.62;
   }
 
   .about-section-body {

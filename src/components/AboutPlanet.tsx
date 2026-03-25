@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import { Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   ABOUT_PLANET_TEXTURE_SEEDS,
@@ -382,9 +382,17 @@ function Scene({
   );
 }
 
-export default function AboutPlanet() {
+export default function AboutPlanet({
+  onFocusChange,
+}: {
+  onFocusChange?: (index: PlanetFocusIndex | null) => void;
+} = {}) {
   const [focusIndex, setFocusIndex] = useState<PlanetFocusIndex | null>(null);
   const scrollYToRestore = useRef<number | null>(null);
+
+  useEffect(() => {
+    onFocusChange?.(focusIndex);
+  }, [focusIndex, onFocusChange]);
 
   const beginFocusLayoutChange = () => {
     scrollYToRestore.current = window.scrollY;
