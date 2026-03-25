@@ -65,7 +65,6 @@ export default function Hero() {
             alt="Ilustração"
             className="h-auto w-full max-w-md origin-right scale-[0.95] object-contain object-right drop-shadow-[0_0_64px_hsl(var(--neon-purple)/0.3)] sm:max-w-xl md:max-h-[min(78vh,720px)] md:w-[min(58vw,44rem)] md:max-w-none lg:w-[min(52vw,52rem)] xl:w-[min(48vw,60rem)]"
             decoding="async"
-            fetchPriority="high"
           />
         </motion.div>
       </div>

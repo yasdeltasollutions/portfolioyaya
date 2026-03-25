@@ -11,7 +11,9 @@ import {
 } from '@/lib/aboutPlanetTextures';
 import {
   getCameraTarget,
+  getMinIdleCameraZForAspect,
   getPlanetLayout,
+  IDLE_CAMERA_Z,
   PLANET_RADII,
   type PlanetFocusIndex,
 } from '@/lib/aboutPlanetLayout';
@@ -36,36 +38,68 @@ const FOCUS_COPY: { title: string; body: string }[] = [
   },
 ];
 
+/** ~45°: FOV muito alto (ex.: 90°+) distorce a perspetiva e as esferas parecem elipses horizontais. */
 const FOV_DEFAULT = 45;
-/** Ligeiramente mais aberto que o default, sem exagerar (FOV alto + escala grande “achata” a esfera no ecrã). */
-const FOV_FOCUS = 42;
+/** Ligeiramente mais aberto no modo foco; ainda moderado para o disco continuar redondo. */
+const FOV_FOCUS = 50;
 
 /**
  * Centro do planeta em foco em NDC: x → direita. Valor alto = máximo para a direita do ecrã
  * (maior parte do disco à direita / fora do canvas). y fixo moderado para não cortar em baixo.
  */
 /** y menos negativo = disco mais alto no canvas, folga em baixo para a curva não cortar. */
-const FOCUS_PLANET_NDC = new THREE.Vector2(2.28, -0.06);
+// y mais negativo = mais baixo no canvas; FOV_FOCUS maior garante folga para não cortar em baixo.
+// Descer bem mais a projeção vertical do planeta no canvas.
+// Desce ainda mais: y mais negativo aproxima a projeção do centro do planeta ao canto inferior direito.
+// Mais abaixo no canvas
+// Mais para a direita no canvas
+// Menos negativo para evitar cortar a base do planeta.
+// Menos negativo para evitar cortar a base do planeta.
+// Subir um pouco para não cortar a base do planeta.
+// Subir um pouco (menos negativo) para não cortar a base.
+/**
+ * Pedido “extremo” de canto inferior direito: o clamp por raio usa o intervalo válido e escolhe
+ * o máximo à direita (maxX) e o mais baixo possível (minY) sem cortar o disco.
+ */
+const FOCUS_PLANET_NDC = new THREE.Vector2(8, -9);
+/** Folga mínima no limite NDC; valores maiores afastam o disco do canto. */
+const FOCUS_NDC_PADDING = 0.09;
 
-const NDC_LOOK_ITERS = 14;
-const NDC_LOOK_GAIN = 0.38;
+const NDC_LOOK_ITERS = 90;
+const NDC_LOOK_GAIN = 1.98;
 
 /** Câmara em perspetiva (não ortográfica) — evita zoom/left-right errados que “apagam” a cena. */
 function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const lookRef = useRef(new THREE.Vector3(0, 0, 0));
   const lookScratch = useRef(new THREE.Vector3(0, 0, 0));
   const lookWork = useRef(new THREE.Vector3(0, 0, 0));
   const projScratch = useRef(new THREE.Vector3(0, 0, 0));
+  const projRightScratch = useRef(new THREE.Vector3(0, 0, 0));
+  const projLeftScratch = useRef(new THREE.Vector3(0, 0, 0));
+  const projUpScratch = useRef(new THREE.Vector3(0, 0, 0));
+  const projDownScratch = useRef(new THREE.Vector3(0, 0, 0));
   const basisRight = useRef(new THREE.Vector3(0, 0, 0));
   const basisUp = useRef(new THREE.Vector3(0, 0, 0));
 
   useFrame((_, delta) => {
+    const p = camera as THREE.PerspectiveCamera;
+    const el = gl.domElement;
+    const cw = el.clientWidth;
+    const ch = el.clientHeight;
+    if (cw > 0 && ch > 0) {
+      const ar = cw / ch;
+      if (Math.abs(p.aspect - ar) > 1e-7) p.aspect = ar;
+    }
+
     const target = getCameraTarget(focusIndex);
+    if (focusIndex === null && cw > 0 && ch > 0) {
+      const minZ = getMinIdleCameraZForAspect(cw / ch);
+      target.z = Math.max(target.z, minZ);
+    }
     const k = 1 - Math.exp(-2.8 * delta);
     camera.position.lerp(target, k);
 
-    const p = camera as THREE.PerspectiveCamera;
     const targetFov = focusIndex === null ? FOV_DEFAULT : FOV_FOCUS;
     const kf = 1 - Math.exp(-3 * delta);
     p.fov = THREE.MathUtils.lerp(p.fov, targetFov, kf);
@@ -79,19 +113,62 @@ function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
       return;
     }
 
-    const planetWorld = getPlanetLayout(focusIndex, focusIndex).position;
+    const { position: planetWorld, scaleMul } = getPlanetLayout(focusIndex, focusIndex);
+    const planetRadiusWorld = PLANET_RADII[focusIndex] * scaleMul;
     lookWork.current.copy(planetWorld);
 
+    /**
+     * Só alinhar o *centro* ao NDC deixa metade do disco fora do quadrado visível: a projeção
+     * corta em linhas retas (base/direita) — não é bug da esfera, é clip do viewport WebGL em |y|>1.
+     * Aqui calculamos a extensão NDC do disco e puxamos o alvo para dentro do retângulo válido.
+     */
     for (let iter = 0; iter < NDC_LOOK_ITERS; iter++) {
       camera.lookAt(lookWork.current);
-      p.updateProjectionMatrix();
-      projScratch.current.copy(planetWorld).project(camera);
-      const errX = FOCUS_PLANET_NDC.x - projScratch.current.x;
-      const errY = FOCUS_PLANET_NDC.y - projScratch.current.y;
-      if (Math.abs(errX) < 0.001 && Math.abs(errY) < 0.001) break;
       camera.updateMatrixWorld();
+      p.updateProjectionMatrix();
       basisRight.current.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
       basisUp.current.setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+
+      projScratch.current.copy(planetWorld).project(camera);
+      projRightScratch.current
+        .copy(planetWorld)
+        .addScaledVector(basisRight.current, planetRadiusWorld)
+        .project(camera);
+      projLeftScratch.current
+        .copy(planetWorld)
+        .addScaledVector(basisRight.current, -planetRadiusWorld)
+        .project(camera);
+      projUpScratch.current
+        .copy(planetWorld)
+        .addScaledVector(basisUp.current, planetRadiusWorld)
+        .project(camera);
+      projDownScratch.current
+        .copy(planetWorld)
+        .addScaledVector(basisUp.current, -planetRadiusWorld)
+        .project(camera);
+
+      const extentRight = Math.abs(projRightScratch.current.x - projScratch.current.x);
+      const extentLeft = Math.abs(projLeftScratch.current.x - projScratch.current.x);
+      const extentUp = Math.abs(projUpScratch.current.y - projScratch.current.y);
+      const extentDown = Math.abs(projDownScratch.current.y - projScratch.current.y);
+
+      const pad = FOCUS_NDC_PADDING;
+      const minTargetX = -1 + extentLeft + pad;
+      const maxTargetX = 1 - extentRight - pad;
+      const minTargetY = -1 + extentDown + pad;
+      const maxTargetY = 1 - extentUp - pad;
+
+      const minX = Math.min(minTargetX, maxTargetX);
+      const maxX = Math.max(minTargetX, maxTargetX);
+      const minY = Math.min(minTargetY, maxTargetY);
+      const maxY = Math.max(minTargetY, maxTargetY);
+      const clampedTargetX = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.x, minX, maxX);
+      const clampedTargetY = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.y, minY, maxY);
+
+      const errX = clampedTargetX - projScratch.current.x;
+      const errY = clampedTargetY - projScratch.current.y;
+      if (Math.abs(errX) < 0.001 && Math.abs(errY) < 0.001) break;
+
       lookWork.current.addScaledVector(basisRight.current, -errX * NDC_LOOK_GAIN);
       lookWork.current.addScaledVector(basisUp.current, -errY * NDC_LOOK_GAIN);
     }
@@ -275,7 +352,7 @@ export default function AboutPlanet() {
     <div
       className={`mx-auto flex w-full flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10 ${
         focusIndex !== null
-          ? 'max-w-none -mx-4 w-[calc(100%+2rem)] sm:-mx-6 sm:w-[calc(100%+3rem)]'
+          ? 'mb-52 sm:mb-40 lg:mb-32 max-w-none -mx-4 w-[calc(100%+2rem)] sm:-mx-6 sm:w-[calc(100%+3rem)]'
           : 'max-w-6xl'
       }`}
     >
@@ -305,12 +382,12 @@ export default function AboutPlanet() {
       <div
         className={`relative min-h-0 min-w-0 w-full flex-1 ${
           focusIndex !== null
-            ? 'min-h-[40rem] h-[min(86vh,840px)] sm:min-h-[44rem] sm:h-[min(84vh,900px)] lg:min-h-[46rem] lg:h-[min(82vh,940px)] overflow-visible'
-            : 'h-[min(460px,62vmin)] sm:h-[500px]'
+            ? 'min-h-[52rem] h-[min(104vh,1120px)] pb-32 sm:min-h-[56rem] sm:h-[min(102vh,1180px)] sm:pb-36 lg:min-h-[58rem] lg:h-[min(100vh,1220px)] lg:pb-40 overflow-visible'
+            : 'h-[min(540px,72vmin)] sm:h-[580px]'
         }`}
       >
         <Canvas
-          camera={{ position: [0, 0.3, 13.5], fov: FOV_DEFAULT, near: 0.1, far: 200 }}
+          camera={{ position: [0, 0.3, IDLE_CAMERA_Z], fov: FOV_DEFAULT, near: 0.1, far: 200 }}
           gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
           dpr={[1, 2]}
           onCreated={({ gl, scene }) => {
