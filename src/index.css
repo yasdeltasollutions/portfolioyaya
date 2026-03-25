@@ -44,7 +44,8 @@
     overflow-x: hidden;
   }
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+    overflow-y: auto;
   }
 }
 
@@ -61,9 +62,24 @@
     backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--glass-border) / 0.4);
   }
+  /* Navbar: vidro com blur e véu roxo (alinhado ao tema neon) */
+  .nav-glass-purple {
+    background: linear-gradient(
+      180deg,
+      hsl(272 55% 14% / 0.72),
+      hsl(272 48% 8% / 0.58)
+    );
+    backdrop-filter: blur(18px) saturate(1.25);
+    -webkit-backdrop-filter: blur(18px) saturate(1.25);
+    box-shadow: 0 12px 40px hsl(272 72% 8% / 0.35);
+  }
   /* Secções após o hero: véu escuro leve — sem backdrop-blur (o blur escondia o WebGL) */
   .section-soft-bg {
     background: hsl(var(--background) / 0.48);
+  }
+  /* Nav fixa = h-16 (4rem); mesmo respiro até ao título em todas as secções */
+  .section-padding-top {
+    padding-top: calc(4rem + 3rem);
   }
   .glow-purple {
     box-shadow: 0 0 20px hsl(var(--neon-purple) / 0.3), 0 0 60px hsl(var(--neon-purple) / 0.1);
@@ -72,7 +88,10 @@
     box-shadow: 0 0 20px hsl(var(--neon-pink) / 0.3), 0 0 60px hsl(var(--neon-pink) / 0.1);
   }
   .glow-text {
-    text-shadow: 0 0 40px hsl(var(--neon-purple) / 0.5), 0 0 80px hsl(var(--neon-pink) / 0.3);
+    text-shadow:
+      0 0 32px hsl(272 82% 52% / 0.6),
+      0 0 72px hsl(278 72% 42% / 0.35),
+      0 0 120px hsl(270 65% 38% / 0.18);
   }
   .neon-border {
     border: 1px solid transparent;
@@ -226,7 +245,7 @@
     will-change: filter;
   }
   .about-blob--left {
-    left: clamp(6rem, 22vw, 14rem);
+    left: 50%;
     top: 52%;
     width: clamp(416px, 101.4vw, 936px);
     height: clamp(416px, 101.4vw, 936px);
@@ -234,14 +253,14 @@
     z-index: 1;
     background: radial-gradient(
       circle at 50% 50%,
-      hsl(var(--neon-purple) / 0.55) 0%,
-      hsl(var(--neon-pink) / 0.32) 26%,
-      hsl(var(--neon-purple) / 0.18) 46%,
-      hsl(var(--neon-purple) / 0.06) 68%,
+      hsl(272 82% 52% / 0.62) 0%,
+      hsl(278 72% 42% / 0.40) 24%,
+      hsl(284 65% 34% / 0.22) 46%,
+      hsl(276 60% 28% / 0.08) 68%,
       transparent 90%
     );
-    opacity: 0.48;
-    box-shadow: 0 0 160px 100px hsl(var(--neon-purple) / 0.22);
+    opacity: 0.52;
+    box-shadow: 0 0 160px 100px hsl(274 75% 44% / 0.25);
   }
 
   .about-section-body {

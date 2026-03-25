@@ -1,4 +1,5 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
@@ -20,6 +21,12 @@ import {
 
 const TEXTURE_VARIANTS: PlanetTextureVariant[] = ['gas-orange', 'gas-pink', 'jupiter-purple'];
 
+const PLANET_NAMES: Record<PlanetFocusIndex, string> = {
+  0: 'Trajetória',
+  1: 'Stack',
+  2: 'Quem Sou',
+};
+
 const DRAG_SENS = 0.009;
 const CLICK_DRAG_PX = 8;
 
@@ -32,7 +39,7 @@ function restoreScrollPositionImmediate(y: number) {
   html.style.scrollBehavior = prev;
 }
 
-const FOCUS_COPY: { title: string; body: string }[] = [
+const FOCUS_COPY: { title: string; body: string; body2?: string }[] = [
   {
     title: 'Trajetória & stack',
     body: 'Formação em ADS e foco em front-end moderno: React, TypeScript e interfaces responsivas, com atenção a performance e acessibilidade.',
@@ -42,8 +49,11 @@ const FOCUS_COPY: { title: string; body: string }[] = [
     body: 'Criar experiências visuais e interativas — animações, WebGL e Canvas — com código limpo e escalável.',
   },
   {
-    title: 'Visão',
-    body: 'Projetos próprios com boas práticas, componentização e arquitetura front-end sólida para crescer com o produto.',
+    title: 'Eu sou',
+    body:
+      'Desenvolvedora Front-End em formação, sou apaixonada por criar interfaces que não sejam apenas funcionais, mas que também proporcionem boas experiências para quem usa.',
+    body2:
+      'Gosto de transformar ideias em soluções visuais bem estruturadas, sempre buscando evoluir tecnicamente e aprimorar a forma como construo cada detalhe — da interação à performance.',
   },
 ];
 
@@ -315,6 +325,30 @@ function InteractivePlanet({
           transparent
         />
       </mesh>
+
+      <Html
+        position={[0, 1.22, 0]}
+        center
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span
+          style={{
+            color: 'white',
+            fontSize: focusIndex === planetIndex ? '42px' : '13px',
+            fontWeight: focusIndex === planetIndex ? 700 : 600,
+            letterSpacing: '0.04em',
+            fontFamily: 'Sora, sans-serif',
+            textShadow: '0 1px 8px rgba(0,0,0,0.55)',
+            transition: 'font-size 0.5s ease, font-weight 0.5s ease',
+          }}
+        >
+          {PLANET_NAMES[planetIndex]}
+        </span>
+      </Html>
     </group>
   );
 }
@@ -380,27 +414,30 @@ export default function AboutPlanet() {
       }`}
     >
       <aside
-        className={`shrink-0 transition-all duration-500 ease-out lg:max-w-md ${
+        className={`shrink-0 transition-all duration-500 ease-out ${
           focusIndex !== null
-            ? 'pointer-events-auto max-h-[min(50vh,28rem)] overflow-y-auto opacity-100 lg:w-[min(100%,22rem)]'
+            ? 'pointer-events-auto w-full max-w-[min(100%,46rem)] overflow-visible opacity-100 pl-4 pr-5 sm:pl-5 sm:pr-6 sm:ml-12 md:ml-16 lg:ml-24 lg:max-w-[min(100%,48rem)] xl:ml-32 2xl:ml-40'
             : 'pointer-events-none max-h-0 overflow-hidden opacity-0 lg:max-w-0 lg:overflow-hidden'
         }`}
         aria-hidden={focusIndex === null}
       >
         {copy && (
-          <div className="rounded-xl border border-white/10 bg-black/35 px-4 py-4 text-left backdrop-blur-md sm:px-5 sm:py-5">
-            <h3 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{copy.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/85 sm:text-base">{copy.body}</p>
-            <button
-              type="button"
-              className="mt-4 text-sm text-white/65 underline decoration-white/30 underline-offset-4 transition hover:text-white/90"
-              onClick={() => {
-                beginFocusLayoutChange();
-                setFocusIndex(null);
-              }}
-            >
-              Voltar aos três planetas
-            </button>
+          <div className="mt-6 w-full max-w-full pt-4 text-left sm:mt-8 sm:pt-6 lg:mt-10 lg:pt-8">
+            <h3 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
+              {focusIndex === 2 ? (
+                <span className="inline-block text-gradient-neon">{copy.title}</span>
+              ) : (
+                <span className="text-white [text-shadow:0_1px_18px_rgba(0,0,0,0.75)]">{copy.title}</span>
+              )}
+            </h3>
+            <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
+              {copy.body}
+            </p>
+            {copy.body2 ? (
+              <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
+                {copy.body2}
+              </p>
+            ) : null}
           </div>
         )}
       </aside>

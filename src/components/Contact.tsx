@@ -15,7 +15,7 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="section-soft-bg relative z-10 flex min-h-screen min-h-dvh flex-col py-32 px-6"
+      className="section-soft-bg section-padding-top relative z-10 flex min-h-screen min-h-dvh flex-col pb-32 px-6"
     >
       <div className="container max-w-2xl">
         <SectionTitle title="Contato" subtitle="Vamos construir algo incrível juntos" />

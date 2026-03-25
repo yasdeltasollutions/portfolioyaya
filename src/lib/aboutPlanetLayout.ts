@@ -35,15 +35,25 @@ function idlePlanetWorldRadius(planetIndex: PlanetFocusIndex): number {
   return PLANET_RADII[planetIndex] * IDLE_SCALE_BASE * IDLE_SCALE_BOOST[planetIndex];
 }
 
-/** Posições em X: distância entre centros = rᵢ + gap + rⱼ → espaçamento visual uniforme. */
+/**
+ * Posições em X com centro visual correto: calcula as posições absolutas e depois
+ * desloca tudo para que o meio geométrico (entre a borda esquerda do planeta 0 e
+ * a borda direita do planeta 2) fique em x = 0.
+ */
 function idlePlanetX(planetIndex: PlanetFocusIndex): number {
   const r0 = idlePlanetWorldRadius(0);
   const r1 = idlePlanetWorldRadius(1);
   const r2 = idlePlanetWorldRadius(2);
   const G = IDLE_SURFACE_GAP;
-  if (planetIndex === 0) return -(r0 + r1 + G);
-  if (planetIndex === 1) return 0;
-  return r1 + r2 + G;
+  const cx0 = -(r0 + r1 + G);
+  const cx1 = 0;
+  const cx2 = r1 + r2 + G;
+  const leftEdge = cx0 - r0;
+  const rightEdge = cx2 + r2;
+  const offset = (leftEdge + rightEdge) / 2;
+  if (planetIndex === 0) return cx0 - offset;
+  if (planetIndex === 1) return cx1 - offset;
+  return cx2 - offset;
 }
 
 /**

@@ -33,7 +33,7 @@ export default function Experience() {
   return (
     <section
       id="experience"
-      className="section-soft-bg relative z-10 flex min-h-screen min-h-dvh flex-col py-32 px-6"
+      className="section-soft-bg section-padding-top relative z-10 flex min-h-screen min-h-dvh flex-col pb-32 px-6"
     >
       <div className="container max-w-3xl">
         <SectionTitle title="Experiência" subtitle="Minha trajetória profissional" />

@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { useSectionNav } from '@/lib/SectionNavContext';
 
 export default function Hero() {
+  const { go } = useSectionNav();
   return (
     <section id="hero" className="relative z-10 flex min-h-screen items-center justify-start overflow-hidden">
       <div className="relative z-10 grid min-h-0 w-full grid-cols-1 items-center gap-10 pb-16 pl-8 pr-6 pt-24 md:min-h-screen md:grid-cols-[minmax(0,1fr)_auto] md:gap-6 md:pb-0 md:pl-12 md:pr-0 md:pt-0 lg:pl-24 xl:pl-28">
@@ -39,18 +41,18 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 1.4, ease: [0.16, 1, 0.3, 1] }}
             className="hero-cta-group mt-10 flex flex-wrap justify-start gap-4"
           >
-            <a
-              href="#projects"
+            <button
+              onClick={() => go('projects')}
               className="btn-glow-neon btn-glow-neon--projects bg-gradient-neon px-8 py-3 text-sm font-semibold text-primary-foreground hover:scale-[1.03]"
             >
               <span className="relative z-10">Ver Projetos</span>
-            </a>
-            <a
-              href="#contact"
+            </button>
+            <button
+              onClick={() => go('contact')}
               className="btn-glow-neon-ghost px-8 py-3 text-sm font-semibold hover:scale-[1.03]"
             >
               <span className="relative z-10">Contato</span>
-            </a>
+            </button>
           </motion.div>
         </div>
 

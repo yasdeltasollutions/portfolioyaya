@@ -25,7 +25,7 @@ export default function Projects() {
   return (
     <section
       id="projects"
-      className="section-soft-bg relative z-10 flex min-h-screen min-h-dvh flex-col py-32 px-6"
+      className="section-soft-bg section-padding-top relative z-10 flex min-h-screen min-h-dvh flex-col pb-32 px-6"
     >
       <div className="container max-w-5xl">
         <SectionTitle title="Projetos" subtitle="Trabalhos em destaque" />
