@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   ABOUT_PLANET_TEXTURE_SEEDS,
@@ -22,6 +22,15 @@ const TEXTURE_VARIANTS: PlanetTextureVariant[] = ['gas-orange', 'gas-pink', 'jup
 
 const DRAG_SENS = 0.009;
 const CLICK_DRAG_PX = 8;
+
+/** Evita saltos de scroll quando o layout do modo foco aumenta a altura da página. */
+function restoreScrollPositionImmediate(y: number) {
+  const html = document.documentElement;
+  const prev = html.style.scrollBehavior;
+  html.style.scrollBehavior = 'auto';
+  window.scrollTo(0, y);
+  html.style.scrollBehavior = prev;
+}
 
 const FOCUS_COPY: { title: string; body: string }[] = [
   {
@@ -341,8 +350,22 @@ function Scene({
 
 export default function AboutPlanet() {
   const [focusIndex, setFocusIndex] = useState<PlanetFocusIndex | null>(null);
+  const scrollYToRestore = useRef<number | null>(null);
+
+  const beginFocusLayoutChange = () => {
+    scrollYToRestore.current = window.scrollY;
+  };
+
+  useLayoutEffect(() => {
+    if (scrollYToRestore.current === null) return;
+    const y = scrollYToRestore.current;
+    scrollYToRestore.current = null;
+    restoreScrollPositionImmediate(y);
+    requestAnimationFrame(() => restoreScrollPositionImmediate(y));
+  }, [focusIndex]);
 
   const onPlanetTap = (index: PlanetFocusIndex) => {
+    beginFocusLayoutChange();
     setFocusIndex((prev) => (prev === index ? null : index));
   };
 
@@ -371,7 +394,10 @@ export default function AboutPlanet() {
             <button
               type="button"
               className="mt-4 text-sm text-white/65 underline decoration-white/30 underline-offset-4 transition hover:text-white/90"
-              onClick={() => setFocusIndex(null)}
+              onClick={() => {
+                beginFocusLayoutChange();
+                setFocusIndex(null);
+              }}
             >
               Voltar aos três planetas
             </button>
