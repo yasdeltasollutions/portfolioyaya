@@ -1,4 +1,4 @@
-# Luminous Experience Forge
+#Yasmin Portfólio
 
 Portfólio front-end em React, Vite e TypeScript.
 
