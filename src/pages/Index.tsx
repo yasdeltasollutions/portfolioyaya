@@ -2,8 +2,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import About from '@/components/About';
-import Experience from '@/components/Experience';
-import TechStack from '@/components/TechStack';
 import Projects from '@/components/Projects';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
@@ -13,8 +11,6 @@ import { SectionNavProvider, useSectionNav, type SectionId } from '@/lib/Section
 const sectionMap: Record<SectionId, () => JSX.Element> = {
   hero: Hero,
   about: About,
-  experience: Experience,
-  tech: TechStack,
   projects: Projects,
   contact: Contact,
 };

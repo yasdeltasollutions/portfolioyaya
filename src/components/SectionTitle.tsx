@@ -4,11 +4,13 @@ import ScrollReveal from './ScrollReveal';
 export default function SectionTitle({
   title,
   subtitle,
+  subtitleClassName,
   children,
   align = 'center',
 }: {
   title?: string;
   subtitle?: string;
+  subtitleClassName?: string;
   children?: ReactNode;
   align?: 'center' | 'left';
 }) {
@@ -28,8 +30,8 @@ export default function SectionTitle({
         <p
           className={
             align === 'center'
-              ? 'mt-4 text-gradient-neon max-w-2xl mx-auto text-lg font-semibold leading-snug'
-              : 'mt-4 text-gradient-neon max-w-2xl text-lg font-semibold leading-snug'
+              ? `mt-4 text-gradient-neon max-w-2xl mx-auto text-lg font-semibold leading-snug ${subtitleClassName ?? ''}`
+              : `mt-4 text-gradient-neon max-w-2xl text-lg font-semibold leading-snug ${subtitleClassName ?? ''}`
           }
         >
           {subtitle}

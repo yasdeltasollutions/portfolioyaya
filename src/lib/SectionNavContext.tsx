@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-export type SectionId = 'hero' | 'about' | 'experience' | 'tech' | 'projects' | 'contact';
+export type SectionId = 'hero' | 'about' | 'projects' | 'contact';
 
 interface SectionNavCtx {
   active: SectionId;

@@ -5,8 +5,6 @@ import { useSectionNav, type SectionId } from '@/lib/SectionNavContext';
 
 const links: { label: string; id: SectionId }[] = [
   { label: 'Sobre', id: 'about' },
-  { label: 'Experiência', id: 'experience' },
-  { label: 'Tech', id: 'tech' },
   { label: 'Projetos', id: 'projects' },
   { label: 'Contato', id: 'contact' },
 ];

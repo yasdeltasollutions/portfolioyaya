@@ -117,7 +117,7 @@ const techIconsFirstRows = techIcons.slice(0, 8);
 const techIconsLastRow = techIcons.slice(8);
 const assetsBase = `${import.meta.env.BASE_URL}images/`;
 
-export default function TechStack() {
+export function TechIconsGrid() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const cols = useGridCols();
 
@@ -130,40 +130,45 @@ export default function TechStack() {
   }, []);
 
   return (
+    <div
+      className="tech-icon-grid grid grid-cols-2 gap-y-12 gap-x-4 overflow-visible pb-20 sm:grid-cols-3 md:grid-cols-4"
+      onMouseLeave={onLeaveGrid}
+    >
+      {techIconsFirstRows.map((t, i) => (
+        <TechIconCell
+          key={t.file}
+          t={t}
+          index={i}
+          cols={cols}
+          hoveredIndex={hoveredIndex}
+          onEnter={onEnter}
+        />
+      ))}
+      <div className="col-span-2 flex flex-wrap justify-center gap-x-4 gap-y-12 sm:col-span-3 md:col-span-4">
+        {techIconsLastRow.map((t, i) => (
+          <TechIconCell
+            key={t.file}
+            t={t}
+            index={8 + i}
+            cols={cols}
+            hoveredIndex={hoveredIndex}
+            onEnter={onEnter}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function TechStack() {
+  return (
     <section
       id="tech"
       className="section-soft-bg section-padding-top relative z-10 flex min-h-screen min-h-dvh flex-col overflow-visible pb-32 px-6"
     >
       <div className="container max-w-4xl overflow-visible">
         <SectionTitle title="Tecnologias" subtitle="Ferramentas do dia a dia" />
-
-        <div
-          className="tech-icon-grid grid grid-cols-2 gap-y-12 gap-x-4 overflow-visible pb-20 sm:grid-cols-3 md:grid-cols-4"
-          onMouseLeave={onLeaveGrid}
-        >
-          {techIconsFirstRows.map((t, i) => (
-            <TechIconCell
-              key={t.file}
-              t={t}
-              index={i}
-              cols={cols}
-              hoveredIndex={hoveredIndex}
-              onEnter={onEnter}
-            />
-          ))}
-          <div className="col-span-2 flex flex-wrap justify-center gap-x-4 gap-y-12 sm:col-span-3 md:col-span-4">
-            {techIconsLastRow.map((t, i) => (
-              <TechIconCell
-                key={t.file}
-                t={t}
-                index={8 + i}
-                cols={cols}
-                hoveredIndex={hoveredIndex}
-                onEnter={onEnter}
-              />
-            ))}
-          </div>
-        </div>
+        <TechIconsGrid />
       </div>
     </section>
   );

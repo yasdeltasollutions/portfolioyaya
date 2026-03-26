@@ -1,77 +1,47 @@
-import { useState } from 'react';
 import ScrollReveal from './ScrollReveal';
 import SectionTitle from './SectionTitle';
-import { Github, Linkedin, Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Instagram, Linkedin, Mail, MessageCircle } from 'lucide-react';
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // placeholder
-  };
+  const socialLinks = [
+    { name: 'Instagram', href: 'https://www.instagram.com/bevilaquadev/', icon: Instagram },
+    { name: 'LinkedIn', href: 'https://www.linkedin.com/in/yasmin-bevilaqua/', icon: Linkedin },
+    { name: 'WhatsApp', href: 'https://wa.me/', icon: MessageCircle },
+    { name: 'Email', href: 'mailto:yayabevilaqua@gmail.com', icon: Mail },
+  ];
 
   return (
     <section
       id="contact"
       className="section-soft-bg section-padding-top relative z-10 flex min-h-screen min-h-dvh flex-col pb-32 px-6"
     >
-      <div className="container max-w-2xl">
-        <SectionTitle title="Contato" subtitle="Vamos construir algo incrível juntos" />
-
-        <ScrollReveal>
-          <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 sm:p-10 neon-border space-y-6">
-            {(['name', 'email'] as const).map(field => (
-              <div key={field}>
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-                  {field === 'name' ? 'Nome' : 'Email'}
-                </label>
-                <input
-                  type={field === 'email' ? 'email' : 'text'}
-                  required
-                  value={form[field]}
-                  onChange={e => setForm(prev => ({ ...prev, [field]: e.target.value }))}
-                  className="w-full bg-secondary/60 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-neon-purple/50 focus:border-neon-purple/50 transition-all duration-200 focus:shadow-[0_0_15px_hsl(272_72%_46%/0.3)]"
-                  placeholder={field === 'name' ? 'Seu nome' : 'seu@email.com'}
-                />
-              </div>
-            ))}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Mensagem</label>
-              <textarea
-                required
-                rows={4}
-                value={form.message}
-                onChange={e => setForm(prev => ({ ...prev, message: e.target.value }))}
-                className="w-full bg-secondary/60 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-neon-purple/50 focus:border-neon-purple/50 transition-all duration-200 resize-none focus:shadow-[0_0_15px_hsl(272_72%_46%/0.3)]"
-                placeholder="Conte-me sobre seu projeto..."
-              />
-            </div>
-
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className="w-full py-3.5 rounded-lg bg-gradient-neon text-sm font-semibold text-primary-foreground flex items-center justify-center gap-2 animate-glow-pulse"
-            >
-              <Send size={16} /> Enviar Mensagem
-            </motion.button>
-          </form>
-        </ScrollReveal>
-
-        <ScrollReveal delay={0.2}>
-          <div className="flex justify-center gap-6 mt-10">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer"
-              className="p-3 glass rounded-full neon-border hover:glow-purple transition-shadow duration-300">
-              <Github size={20} className="text-muted-foreground hover:text-foreground transition-colors" />
-            </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
-              className="p-3 glass rounded-full neon-border hover:glow-pink transition-shadow duration-300">
-              <Linkedin size={20} className="text-muted-foreground hover:text-foreground transition-colors" />
-            </a>
+      <div className="container min-h-[55vh] max-w-6xl">
+        <div className="grid items-start gap-16 md:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="mt-2 max-w-md justify-self-start pl-16 md:mt-8 md:pl-32">
+            <SectionTitle
+              title="Contato"
+              subtitle="Me encontre nas redes"
+              subtitleClassName="whitespace-nowrap"
+            />
           </div>
-        </ScrollReveal>
+
+          <ScrollReveal delay={0.1}>
+            <ul className="contact-social-stack mt-10 justify-self-center md:-ml-20 md:mt-40 md:justify-self-center" aria-label="Redes sociais">
+              {socialLinks.map(({ name, href, icon: Icon }) => (
+                <li key={name}>
+                  <a href={href} target="_blank" rel="noopener noreferrer" aria-label={name}>
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <span />
+                    <Icon size={20} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );

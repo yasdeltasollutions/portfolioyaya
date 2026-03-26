@@ -18,6 +18,8 @@ import {
   PLANET_RADII,
   type PlanetFocusIndex,
 } from '@/lib/aboutPlanetLayout';
+import { ExperienceTimeline } from '@/components/Experience';
+import { TechIconsGrid } from '@/components/TechStack';
 
 const TEXTURE_VARIANTS: PlanetTextureVariant[] = ['gas-orange', 'gas-pink', 'jupiter-purple'];
 
@@ -430,22 +432,47 @@ export default function AboutPlanet({
         aria-hidden={focusIndex === null}
       >
         {copy && (
-          <div className="mt-6 w-full max-w-full pt-4 text-left sm:mt-8 sm:pt-6 lg:mt-10 lg:pt-8">
-            <h3 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
-              {focusIndex === 2 ? (
-                <span className="inline-block text-gradient-neon">{copy.title}</span>
-              ) : (
-                <span className="text-white [text-shadow:0_1px_18px_rgba(0,0,0,0.75)]">{copy.title}</span>
-              )}
-            </h3>
-            <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
-              {copy.body}
-            </p>
-            {copy.body2 ? (
-              <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
-                {copy.body2}
-              </p>
-            ) : null}
+          <div
+            className={`w-full max-w-full text-left ${
+              focusIndex === 0 || focusIndex === 1
+                ? 'mt-0 pt-0 sm:mt-2 sm:pt-2 lg:mt-4 lg:pt-3'
+                : 'mt-6 pt-4 sm:mt-8 sm:pt-6 lg:mt-10 lg:pt-8'
+            }`}
+          >
+            {focusIndex === 0 ? (
+              <>
+                <h3 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
+                  <span className="inline-block text-gradient-neon">Experiência</span>
+                </h3>
+                <div className="mt-2 -translate-y-2">
+                  <ExperienceTimeline reveal />
+                </div>
+              </>
+            ) : focusIndex === 1 ? (
+              <>
+                <div className="mt-0">
+                  <TechIconsGrid />
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-semibold tracking-tight sm:text-2xl lg:text-3xl">
+                  {focusIndex === 2 ? (
+                    <span className="inline-block text-gradient-neon">{copy.title}</span>
+                  ) : (
+                    <span className="text-white [text-shadow:0_1px_18px_rgba(0,0,0,0.75)]">{copy.title}</span>
+                  )}
+                </h3>
+                <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
+                  {copy.body}
+                </p>
+                {copy.body2 ? (
+                  <p className="mt-3 text-base leading-relaxed text-white/90 [text-shadow:0_1px_18px_rgba(0,0,0,0.75)] sm:mt-4 sm:text-lg lg:text-xl">
+                    {copy.body2}
+                  </p>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </aside>
