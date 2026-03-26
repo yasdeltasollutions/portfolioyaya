@@ -6,14 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PageLoader from "./components/PageLoader.tsx";
-import SiteParticleBackground from "./components/SiteParticleBackground.tsx";
+import StarsCanvas from "./components/star-background.tsx";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SiteParticleBackground />
+      <StarsCanvas />
       <PageLoader />
       <Toaster />
       <Sonner />

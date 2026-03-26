@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
-import { Float, Stars } from '@react-three/drei';
+import { Float, PointMaterial, Points } from '@react-three/drei';
 import { useRef, useMemo, Suspense, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -304,6 +304,71 @@ function GalaxySpin({ children }: { children: ReactNode }) {
   return <group ref={groupRef}>{children}</group>;
 }
 
+/* ───────── Star background ───────── */
+function StarBackground() {
+  const ref = useRef<THREE.Points>(null);
+  const sphere = useMemo(() => {
+    const count = 5000;
+    const points = new Float32Array(count * 3);
+    const minRadius = 18;
+    const maxRadius = 24;
+    for (let i = 0; i < points.length; i += 3) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      const r = THREE.MathUtils.lerp(minRadius, maxRadius, Math.random());
+      const sinPhi = Math.sin(phi);
+
+      points[i] = r * sinPhi * Math.cos(theta);
+      points[i + 1] = r * sinPhi * Math.sin(theta);
+      points[i + 2] = r * Math.cos(phi);
+    }
+    return points;
+  }, []);
+
+  useFrame((state, delta) => {
+    if (!ref.current) return;
+
+    // Slow global spin keeps the field alive.
+    ref.current.rotation.x -= delta * 0.04;
+    ref.current.rotation.y -= delta * 0.06;
+
+    // Gentle background drift: particles move on Z and recycle.
+    const positions = ref.current.geometry.attributes.position.array as Float32Array;
+    const minZ = -26;
+    const maxZ = 12;
+    const speed = 1.4;
+
+    for (let i = 2; i < positions.length; i += 3) {
+      positions[i] += speed * delta;
+      if (positions[i] > maxZ) {
+        positions[i] = minZ;
+      }
+    }
+
+    ref.current.geometry.attributes.position.needsUpdate = true;
+
+    const material = ref.current.material as THREE.PointsMaterial;
+    material.opacity = 0.72 + Math.sin(state.clock.elapsedTime * 1.2) * 0.12;
+  });
+
+  return (
+    <group rotation={[0, 0, Math.PI / 4]}>
+      <Points ref={ref} stride={3} positions={sphere} frustumCulled>
+        <PointMaterial
+          transparent
+          color="#fff"
+          size={0.035}
+          opacity={0.9}
+          sizeAttenuation={false}
+          depthWrite={false}
+        />
+      </Points>
+    </group>
+  );
+}
+
 /* ───────── Planet Core ───────── */
 function Planet() {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -367,10 +432,7 @@ export default function SiteParticleBackground() {
           <pointLight position={[-4, -3, 3]} color="#FF4D8D" intensity={2} distance={12} />
           <pointLight position={[0, 3, -5]} color="#FF7A18" intensity={1.5} distance={10} />
 
-          <GalaxySpin>
-            <SpaceDust />
-            <Stars radius={60} depth={80} count={1540} factor={3} saturation={0.3} fade speed={0.258} />
-          </GalaxySpin>
+          <StarBackground />
 
           <CameraRig />
 
