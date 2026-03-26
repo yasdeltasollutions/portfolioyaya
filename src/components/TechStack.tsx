@@ -95,13 +95,13 @@ function TechIconCell({
           <span className="tech-icon-stack">
             <img
               className="tech-icon-img"
-              src={`/images/${encodeURIComponent(t.file)}`}
+              src={`${assetsBase}${encodeURIComponent(t.file)}`}
               alt={t.name}
               draggable={false}
             />
             <img
               className="tech-icon-reflect"
-              src={`/images/${encodeURIComponent(t.file)}`}
+              src={`${assetsBase}${encodeURIComponent(t.file)}`}
               alt=""
               aria-hidden
               draggable={false}
@@ -115,6 +115,7 @@ function TechIconCell({
 
 const techIconsFirstRows = techIcons.slice(0, 8);
 const techIconsLastRow = techIcons.slice(8);
+const assetsBase = `${import.meta.env.BASE_URL}images/`;
 
 export default function TechStack() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
