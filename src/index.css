@@ -71,16 +71,16 @@
     backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--glass-border) / 0.4);
   }
-  /* Navbar: vidro com blur e véu roxo (alinhado ao tema neon) */
+  /* Navbar: vidro escuro com blur (sem tom roxo) */
   .nav-glass-purple {
     background: linear-gradient(
       180deg,
-      hsl(272 55% 14% / 0.72),
-      hsl(272 48% 8% / 0.58)
+      hsl(240 12% 8% / 0.74),
+      hsl(240 10% 4% / 0.62)
     );
     backdrop-filter: blur(18px) saturate(1.25);
     -webkit-backdrop-filter: blur(18px) saturate(1.25);
-    box-shadow: 0 12px 40px hsl(272 72% 8% / 0.35);
+    box-shadow: 0 12px 40px hsl(240 10% 3% / 0.42);
   }
   /* Cards Experiência: blur + véu roxo suave (mais leve que a navbar) */
   .experience-card-glass {
