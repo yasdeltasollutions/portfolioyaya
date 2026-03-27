@@ -7,7 +7,7 @@ import {
   BACKGROUND_MATCH_SPIN_Y,
   SITE_PLANET_PALETTES,
   type PlanetTextureVariant,
-  createPlanetTextureCanvas,
+  getOrCreatePlanetTextureCanvas,
   planetMaterialStyle,
 } from '@/lib/aboutPlanetTextures';
 import {
@@ -22,6 +22,7 @@ import { ExperienceTimeline } from '@/components/Experience';
 import { TechIconsGrid } from '@/components/TechStack';
 
 const TEXTURE_VARIANTS: PlanetTextureVariant[] = ['gas-orange', 'gas-pink', 'jupiter-purple'];
+const PLANET_TEXTURE_CACHE = new Map<string, THREE.CanvasTexture>();
 
 const PLANET_NAMES: Record<PlanetFocusIndex, string> = {
   0: 'Trajetória',
@@ -86,8 +87,11 @@ const FOCUS_PLANET_NDC = new THREE.Vector2(8, -9);
 /** Folga mínima no limite NDC; valores maiores afastam o disco do canto. */
 const FOCUS_NDC_PADDING = 0.09;
 
-const NDC_LOOK_ITERS = 90;
 const NDC_LOOK_GAIN = 1.98;
+const NDC_LOOK_FAST_ITERS = 12;
+const NDC_LOOK_SLOW_ITERS = 2;
+const CAMERA_SETTLE_EPS = 0.0008;
+const NDC_SOLVER_IDLE_SKIP_FRAMES = 5;
 
 /** Câmara em perspetiva (não ortográfica) — evita zoom/left-right errados que “apagam” a cena. */
 function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
@@ -102,6 +106,13 @@ function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
   const projDownScratch = useRef(new THREE.Vector3(0, 0, 0));
   const basisRight = useRef(new THREE.Vector3(0, 0, 0));
   const basisUp = useRef(new THREE.Vector3(0, 0, 0));
+  const focusTransitionBoostFrames = useRef(0);
+  const frameTick = useRef(0);
+  const lastAspect = useRef(0);
+
+  useEffect(() => {
+    focusTransitionBoostFrames.current = 28;
+  }, [focusIndex]);
 
   useFrame((_, delta) => {
     const p = camera as THREE.PerspectiveCamera;
@@ -112,12 +123,14 @@ function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
       const ar = cw / ch;
       if (Math.abs(p.aspect - ar) > 1e-7) p.aspect = ar;
     }
+    frameTick.current += 1;
 
     const target = getCameraTarget(focusIndex);
     if (focusIndex === null && cw > 0 && ch > 0) {
       const minZ = getMinIdleCameraZForAspect(cw / ch);
       target.z = Math.max(target.z, minZ);
     }
+    const posBefore = camera.position.distanceToSquared(target);
     const k = 1 - Math.exp(-2.8 * delta);
     camera.position.lerp(target, k);
 
@@ -138,62 +151,78 @@ function CameraRig({ focusIndex }: { focusIndex: PlanetFocusIndex | null }) {
     const planetRadiusWorld = PLANET_RADII[focusIndex] * scaleMul;
     lookWork.current.copy(planetWorld);
 
-    /**
-     * Só alinhar o *centro* ao NDC deixa metade do disco fora do quadrado visível: a projeção
-     * corta em linhas retas (base/direita) — não é bug da esfera, é clip do viewport WebGL em |y|>1.
-     * Aqui calculamos a extensão NDC do disco e puxamos o alvo para dentro do retângulo válido.
-     */
-    for (let iter = 0; iter < NDC_LOOK_ITERS; iter++) {
-      camera.lookAt(lookWork.current);
-      camera.updateMatrixWorld();
-      p.updateProjectionMatrix();
-      basisRight.current.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
-      basisUp.current.setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+    const settling = posBefore > CAMERA_SETTLE_EPS || Math.abs(p.fov - targetFov) > 0.015;
+    const boosted = focusTransitionBoostFrames.current > 0;
+    const aspectNow = ch > 0 ? cw / ch : 0;
+    const aspectChanged = Math.abs(aspectNow - lastAspect.current) > 0.0005;
+    if (aspectChanged) lastAspect.current = aspectNow;
+    const runSolverThisFrame =
+      boosted ||
+      settling ||
+      aspectChanged ||
+      frameTick.current % NDC_SOLVER_IDLE_SKIP_FRAMES === 0;
+    const iterBudget = boosted || settling || aspectChanged ? NDC_LOOK_FAST_ITERS : NDC_LOOK_SLOW_ITERS;
+    if (focusTransitionBoostFrames.current > 0) focusTransitionBoostFrames.current -= 1;
 
-      projScratch.current.copy(planetWorld).project(camera);
-      projRightScratch.current
-        .copy(planetWorld)
-        .addScaledVector(basisRight.current, planetRadiusWorld)
-        .project(camera);
-      projLeftScratch.current
-        .copy(planetWorld)
-        .addScaledVector(basisRight.current, -planetRadiusWorld)
-        .project(camera);
-      projUpScratch.current
-        .copy(planetWorld)
-        .addScaledVector(basisUp.current, planetRadiusWorld)
-        .project(camera);
-      projDownScratch.current
-        .copy(planetWorld)
-        .addScaledVector(basisUp.current, -planetRadiusWorld)
-        .project(camera);
+    if (runSolverThisFrame) {
+      /**
+       * Solver NDC é o bloco mais caro: executa com alta frequência só em transições.
+       * Em regime estável, roda a cada N frames para manter fluidez sem gastar CPU todo frame.
+       */
+      for (let iter = 0; iter < iterBudget; iter++) {
+        camera.lookAt(lookWork.current);
+        camera.updateMatrixWorld();
+        p.updateProjectionMatrix();
+        basisRight.current.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+        basisUp.current.setFromMatrixColumn(camera.matrixWorld, 1).normalize();
 
-      const extentRight = Math.abs(projRightScratch.current.x - projScratch.current.x);
-      const extentLeft = Math.abs(projLeftScratch.current.x - projScratch.current.x);
-      const extentUp = Math.abs(projUpScratch.current.y - projScratch.current.y);
-      const extentDown = Math.abs(projDownScratch.current.y - projScratch.current.y);
+        projScratch.current.copy(planetWorld).project(camera);
+        projRightScratch.current
+          .copy(planetWorld)
+          .addScaledVector(basisRight.current, planetRadiusWorld)
+          .project(camera);
+        projLeftScratch.current
+          .copy(planetWorld)
+          .addScaledVector(basisRight.current, -planetRadiusWorld)
+          .project(camera);
+        projUpScratch.current
+          .copy(planetWorld)
+          .addScaledVector(basisUp.current, planetRadiusWorld)
+          .project(camera);
+        projDownScratch.current
+          .copy(planetWorld)
+          .addScaledVector(basisUp.current, -planetRadiusWorld)
+          .project(camera);
 
-      const pad = FOCUS_NDC_PADDING;
-      const minTargetX = -1 + extentLeft + pad;
-      const maxTargetX = 1 - extentRight - pad;
-      const minTargetY = -1 + extentDown + pad;
-      const maxTargetY = 1 - extentUp - pad;
+        const extentRight = Math.abs(projRightScratch.current.x - projScratch.current.x);
+        const extentLeft = Math.abs(projLeftScratch.current.x - projScratch.current.x);
+        const extentUp = Math.abs(projUpScratch.current.y - projScratch.current.y);
+        const extentDown = Math.abs(projDownScratch.current.y - projScratch.current.y);
 
-      const minX = Math.min(minTargetX, maxTargetX);
-      const maxX = Math.max(minTargetX, maxTargetX);
-      const minY = Math.min(minTargetY, maxTargetY);
-      const maxY = Math.max(minTargetY, maxTargetY);
-      const clampedTargetX = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.x, minX, maxX);
-      const clampedTargetY = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.y, minY, maxY);
+        const pad = FOCUS_NDC_PADDING;
+        const minTargetX = -1 + extentLeft + pad;
+        const maxTargetX = 1 - extentRight - pad;
+        const minTargetY = -1 + extentDown + pad;
+        const maxTargetY = 1 - extentUp - pad;
 
-      const errX = clampedTargetX - projScratch.current.x;
-      const errY = clampedTargetY - projScratch.current.y;
-      if (Math.abs(errX) < 0.001 && Math.abs(errY) < 0.001) break;
+        const minX = Math.min(minTargetX, maxTargetX);
+        const maxX = Math.max(minTargetX, maxTargetX);
+        const minY = Math.min(minTargetY, maxTargetY);
+        const maxY = Math.max(minTargetY, maxTargetY);
+        const clampedTargetX = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.x, minX, maxX);
+        const clampedTargetY = THREE.MathUtils.clamp(FOCUS_PLANET_NDC.y, minY, maxY);
 
-      lookWork.current.addScaledVector(basisRight.current, -errX * NDC_LOOK_GAIN);
-      lookWork.current.addScaledVector(basisUp.current, -errY * NDC_LOOK_GAIN);
+        const errX = clampedTargetX - projScratch.current.x;
+        const errY = clampedTargetY - projScratch.current.y;
+        if (Math.abs(errX) < 0.001 && Math.abs(errY) < 0.001) break;
+
+        lookWork.current.addScaledVector(basisRight.current, -errX * NDC_LOOK_GAIN);
+        lookWork.current.addScaledVector(basisUp.current, -errY * NDC_LOOK_GAIN);
+      }
     }
-    camera.lookAt(lookWork.current);
+    const lookBlend = 1 - Math.exp(-8 * delta);
+    lookRef.current.lerp(lookWork.current, lookBlend);
+    camera.lookAt(lookRef.current);
     p.updateProjectionMatrix();
   });
 
@@ -226,14 +255,17 @@ function InteractivePlanet({
   const last = useRef({ x: 0, y: 0 });
   const { gl } = useThree();
   const mat = planetMaterialStyle(textureVariant);
-
   const texture = useMemo(() => {
-    const canvas = createPlanetTextureCanvas(palette, textureSeed, textureVariant);
-    const tex = new THREE.CanvasTexture(canvas);
+    const key = `${textureVariant}:${textureSeed}:${palette.join('|')}`;
+    const cached = PLANET_TEXTURE_CACHE.get(key);
+    if (cached) return cached;
+    const canvas = getOrCreatePlanetTextureCanvas(palette, textureSeed, textureVariant);
+    const tex = new THREE.CanvasTexture(canvas as HTMLCanvasElement);
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.needsUpdate = true;
+    PLANET_TEXTURE_CACHE.set(key, tex);
     return tex;
   }, [palette, textureSeed, textureVariant]);
 
@@ -319,6 +351,7 @@ function InteractivePlanet({
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial
           map={texture}
+          color="#ffffff"
           roughness={mat.roughness}
           metalness={mat.metalness}
           emissive={mat.emissive}

@@ -26,7 +26,7 @@ export default function About() {
           </SectionTitle>
         </div>
 
-        <ScrollReveal className="pointer-events-auto mt-10 w-full sm:mt-12 md:mt-14">
+        <ScrollReveal fadeOnly className="pointer-events-auto mt-10 w-full sm:mt-12 md:mt-14">
           <AboutPlanet onFocusChange={setPlanetFocus} />
         </ScrollReveal>
       </div>

@@ -2,6 +2,8 @@
  * Texturas cartoon / gigantes gasosos — mesmo estilo visual do PlanetScene de referência.
  * Esquerda = laranja · Centro = rosa · Direita = roxo.
  */
+export type PlanetTextureCanvas = HTMLCanvasElement | OffscreenCanvas;
+
 export const SITE_PLANET_PALETTES: [string, string, string][] = [
   ['#ffedd5', '#fb923c', '#c2410c'],
   ['#fce7f3', '#f472b6', '#be185d'],
@@ -21,10 +23,20 @@ export function mulberry32(seed: number) {
   };
 }
 
+function createCanvasSurface(width: number, height: number): PlanetTextureCanvas {
+  // No main thread, prioriza canvas DOM para máxima compatibilidade com THREE.CanvasTexture.
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+  }
+  // Em worker, usa OffscreenCanvas.
+  return new OffscreenCanvas(width, height);
+}
+
 export function generateRadialCartoonTexture(center: string, mid: string, edge: string, blobSeed: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  const canvas = createCanvasSurface(512, 512);
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
@@ -50,9 +62,7 @@ export function generateRadialCartoonTexture(center: string, mid: string, edge: 
 }
 
 export function generateJupiterPurpleTexture(seed: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  const canvas = createCanvasSurface(1024, 512);
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
@@ -147,9 +157,7 @@ export function generateJupiterPurpleTexture(seed: number) {
 }
 
 export function generatePinkGasGiantTexture(seed: number) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  const canvas = createCanvasSurface(1024, 512);
 
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
@@ -258,14 +266,10 @@ export function generateOrangeGasGiantTexture(seed: number) {
   const W = 1024;
   const H = 512;
 
-  const work = document.createElement('canvas');
-  work.width = W;
-  work.height = H;
+  const work = createCanvasSurface(W, H);
   const wctx = work.getContext('2d');
   if (!wctx) {
-    const c = document.createElement('canvas');
-    c.width = W;
-    c.height = H;
+    const c = createCanvasSurface(W, H);
     return c;
   }
 
@@ -398,9 +402,7 @@ export function generateOrangeGasGiantTexture(seed: number) {
     blobDup(cx, cy, rx, ry, rot, ph, `rgba(234, 88, 12, ${a})`);
   }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  const canvas = createCanvasSurface(W, H);
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
 
@@ -460,10 +462,74 @@ export function createPlanetTextureCanvas(
   palette: [string, string, string],
   textureSeed: number,
   variant: PlanetTextureVariant,
-): HTMLCanvasElement {
+): PlanetTextureCanvas {
   if (variant === 'jupiter-purple') return generateJupiterPurpleTexture(textureSeed);
   if (variant === 'gas-pink') return generatePinkGasGiantTexture(textureSeed);
   return generateOrangeGasGiantTexture(textureSeed);
+}
+
+const PLANET_CANVAS_CACHE = new Map<string, PlanetTextureCanvas>();
+const ABOUT_TEXTURE_VARIANTS: PlanetTextureVariant[] = ['gas-orange', 'gas-pink', 'jupiter-purple'];
+
+function planetTextureKey(
+  palette: [string, string, string],
+  textureSeed: number,
+  variant: PlanetTextureVariant,
+) {
+  return `${variant}:${textureSeed}:${palette.join('|')}`;
+}
+
+export function getOrCreatePlanetTextureCanvas(
+  palette: [string, string, string],
+  textureSeed: number,
+  variant: PlanetTextureVariant,
+) {
+  const key = planetTextureKey(palette, textureSeed, variant);
+  const cached = PLANET_CANVAS_CACHE.get(key);
+  if (cached) return cached;
+  const canvas = createPlanetTextureCanvas(palette, textureSeed, variant);
+  PLANET_CANVAS_CACHE.set(key, canvas);
+  return canvas;
+}
+
+/**
+ * Pré-aquece as texturas em pedaços para evitar pico único na primeira entrada da seção.
+ */
+export function prewarmAboutPlanetTexturesChunked() {
+  if (typeof window === 'undefined') return () => {};
+
+  let idx = 0;
+  let cancelled = false;
+  let timeoutId: number | null = null;
+
+  const schedule = (fn: () => void) => {
+    if ('requestIdleCallback' in window) {
+      const w = window as Window & {
+        requestIdleCallback: (cb: (d: { timeRemaining: () => number; didTimeout: boolean }) => void) => number;
+      };
+      return w.requestIdleCallback(() => fn());
+    }
+    timeoutId = window.setTimeout(fn, 16);
+    return timeoutId;
+  };
+
+  const tick = () => {
+    if (cancelled || idx >= ABOUT_PLANET_TEXTURE_SEEDS.length) return;
+    const i = idx++;
+    getOrCreatePlanetTextureCanvas(
+      SITE_PLANET_PALETTES[i] as [string, string, string],
+      ABOUT_PLANET_TEXTURE_SEEDS[i],
+      ABOUT_TEXTURE_VARIANTS[i],
+    );
+    if (!cancelled && idx < ABOUT_PLANET_TEXTURE_SEEDS.length) schedule(tick);
+  };
+
+  schedule(tick);
+
+  return () => {
+    cancelled = true;
+    if (timeoutId !== null) window.clearTimeout(timeoutId);
+  };
 }
 
 export function planetMaterialStyle(variant: PlanetTextureVariant) {
